@@ -63,25 +63,12 @@ public class DataDictionaryBrowserFactory implements ToolWindowFactory {
                 int caretOffset = editor.getCaretModel().getCurrentCaret().getOffset();
 
                 // All write operations need to be executed via a runWriteAction call
-                ApplicationManager.getApplication().invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        CommandProcessor.getInstance().executeCommand(project, new Runnable() {
-                            @Override
-                            public void run() {
+                ApplicationManager.getApplication().invokeLater(() -> CommandProcessor.getInstance().executeCommand(project, () -> {
 
-                                final Runnable readRunner = new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        editor.getDocument().insertString(caretOffset, targetNode.getUserObject().toString());
-                                    }
-                                };
+                    final Runnable readRunner = () -> editor.getDocument().insertString(caretOffset, targetNode.getUserObject().toString());
 
-                                ApplicationManager.getApplication().runWriteAction(readRunner);
-                            }
-                        }, "DataDictionary", null);
-                    }
-                });
+                    ApplicationManager.getApplication().runWriteAction(readRunner);
+                }, "DataDictionary", null));
             }
         });
 
