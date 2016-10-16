@@ -4,22 +4,29 @@ import com.intellij.openapi.actionSystem.DataKeys;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileChooser.FileChooser;
+import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.wm.*;
 import com.intellij.ui.content.*;
+import com.sun.org.apache.bcel.internal.generic.POP;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import java.awt.event.*;
+import java.util.Enumeration;
 
 public class DataDictionaryBrowserFactory implements ToolWindowFactory {
 
     private JPanel dictionaryBrowserWindowContent;
     private JTree dictionaryTree;
     private JTextField searchField;
+    private TextFieldWithBrowseButton dictionaryLocationTextField;
     private ToolWindow dictionaryBrowserToolWindow;
 
     public DataDictionaryBrowserFactory() {
@@ -80,6 +87,15 @@ public class DataDictionaryBrowserFactory implements ToolWindowFactory {
                 // Filter the dictionary tree view
             }
         });
+        dictionaryLocationTextField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                // Get the path for the dictionary and load it.
+                String path = dictionaryLocationTextField.getText();
+                PopulateListView(path);
+            }
+        });
     }
 
     // Create the tool window content.
@@ -91,6 +107,22 @@ public class DataDictionaryBrowserFactory implements ToolWindowFactory {
         Content content = contentFactory.createContent(dictionaryBrowserWindowContent, "", false);
         toolWindow.getContentManager().addContent(content);
 
+        // Only allow selecting folders
+        FileChooserDescriptor descriptor = new FileChooserDescriptor(false, true, false, false, false, false);
+        dictionaryLocationTextField.addBrowseFolderListener("Data Dictionary Directory",
+                                                            "Select data dictionary directory",
+                                                            null,
+                                                            descriptor);
+
+        // Ensure that we don't show the default treeview items by default.
+        // The new default should instruct the user to select a folder for the dictionary.
+        TreeNode defaultNode = new DefaultMutableTreeNode("Select a data dictionary folder location.");
+        DefaultTreeModel defaultModel = new DefaultTreeModel(defaultNode);
+        dictionaryTree.setModel(defaultModel);
+    }
+
+    private void PopulateListView(String path)
+    {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Entities");
 
         // Load entities from data dictionary
