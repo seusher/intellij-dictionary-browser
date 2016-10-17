@@ -12,6 +12,8 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.wm.*;
 import com.intellij.ui.content.*;
 import com.sun.org.apache.bcel.internal.generic.POP;
+import org.apache.commons.lang.enums.Enum;
+import org.apache.sanselan.common.ImageMetadata;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -72,7 +74,7 @@ public class DataDictionaryBrowserFactory implements ToolWindowFactory {
                 // All write operations need to be executed via a runWriteAction call
                 ApplicationManager.getApplication().invokeLater(() -> CommandProcessor.getInstance().executeCommand(project, () -> {
 
-                    final Runnable readRunner = () -> editor.getDocument().insertString(caretOffset, targetNode.getUserObject().toString());
+                    final Runnable readRunner = () -> editor.getDocument().insertString(caretOffset, ((TreeViewEntry)targetNode.getUserObject()).getName());
 
                     ApplicationManager.getApplication().runWriteAction(readRunner);
                 }, "DataDictionary", null));
@@ -107,6 +109,8 @@ public class DataDictionaryBrowserFactory implements ToolWindowFactory {
         Content content = contentFactory.createContent(dictionaryBrowserWindowContent, "", false);
         toolWindow.getContentManager().addContent(content);
 
+        dictionaryTree.setCellRenderer(new DictionaryTreeCellRenderer());
+
         // Only allow selecting folders
         FileChooserDescriptor descriptor = new FileChooserDescriptor(false, true, false, false, false, false);
         dictionaryLocationTextField.addBrowseFolderListener("Data Dictionary Directory",
@@ -126,13 +130,13 @@ public class DataDictionaryBrowserFactory implements ToolWindowFactory {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Entities");
 
         // Load entities from data dictionary
-        DefaultMutableTreeNode entity = new DefaultMutableTreeNode("Tenant");
+        DefaultMutableTreeNode entity = new DefaultMutableTreeNode(new TreeViewEntry("Tenant", ItemType.Entity));
         root.add(entity);
 
-        DefaultMutableTreeNode dataset = new DefaultMutableTreeNode("Insight");
+        DefaultMutableTreeNode dataset = new DefaultMutableTreeNode(new TreeViewEntry("Insight", ItemType.Dataset));
 
-        DefaultMutableTreeNode column1 = new DefaultMutableTreeNode("tenant_id");
-        DefaultMutableTreeNode column2 = new DefaultMutableTreeNode("insight1");
+        DefaultMutableTreeNode column1 = new DefaultMutableTreeNode(new TreeViewEntry("tenant_id", ItemType.Column));
+        DefaultMutableTreeNode column2 = new DefaultMutableTreeNode(new TreeViewEntry("insight1", ItemType.Column));
 
         dataset.add(column1);
         dataset.add(column2);
@@ -143,5 +147,25 @@ public class DataDictionaryBrowserFactory implements ToolWindowFactory {
 
         model.setRoot(root);
         model.reload();
+    }
+
+    class TreeViewEntry
+    {
+        private String name;
+        public ItemType type;
+
+        public TreeViewEntry(String name, ItemType type) {
+            this.name = name;
+            this.type = type;
+        }
+
+        public String getName() { return this.name; }
+        public ItemType getType() { return this.type; }
+    }
+
+    public enum ItemType {
+        Entity,
+        Dataset,
+        Column
     }
 }
