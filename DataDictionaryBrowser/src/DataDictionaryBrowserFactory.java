@@ -20,6 +20,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import java.awt.*;
 import java.awt.event.*;
 import java.util.Enumeration;
 
@@ -29,6 +30,19 @@ public class DataDictionaryBrowserFactory implements ToolWindowFactory {
     private JTree dictionaryTree;
     private JTextField searchField;
     private TextFieldWithBrowseButton dictionaryLocationTextField;
+    private JPanel entityPanel;
+    private JTextField txtEntityName;
+    private JTextPane txtEntityDesc;
+    private JPanel datasetPanel;
+    private JTextField txtDatasetName;
+    private JTextPane txtDatasetDesc;
+    private JTextField txtTableName;
+    private JPanel emptyPanel;
+    private JPanel metadataPanel;
+    private JPanel columnPanel;
+    private JTextField txtColumnName;
+    private JTextField textField2;
+    private JTextPane txtColumnDesc;
     private ToolWindow dictionaryBrowserToolWindow;
 
     public DataDictionaryBrowserFactory() {
@@ -37,10 +51,6 @@ public class DataDictionaryBrowserFactory implements ToolWindowFactory {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
                 super.mouseClicked(mouseEvent);
-
-                // Only respond to double clicks
-                if (mouseEvent.getClickCount() < 2)
-                    return;
 
                 // Get the path to the selected item
                 TreePath selectionPath = dictionaryTree.getSelectionPath();
@@ -53,8 +63,26 @@ public class DataDictionaryBrowserFactory implements ToolWindowFactory {
                 // 3 = Dataset
                 // 4 = Column
 
+                CardLayout layout = (CardLayout)metadataPanel.getLayout();
+
+                if (pathCount == 2) {
+                    layout.show(metadataPanel, "Entity");
+                }
+                else if (pathCount == 3) {
+                    layout.show(metadataPanel, "Dataset");
+                }
+                else if (pathCount == 4) {
+                    layout.show(metadataPanel, "Column");
+                }
+                else
+                    layout.show(metadataPanel, "Empty");
+
                 // If we select an Entity or the root node, don't do anything
                 if (pathCount < 3)
+                    return;
+
+                // Only respond to double clicks
+                if (mouseEvent.getClickCount() < 2)
                     return;
 
                 // If we selected a column, set the context to its dataset
